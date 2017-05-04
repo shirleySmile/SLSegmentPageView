@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'SLSegmentPageView_Example' do
+  pod 'SLSegmentPageView', :path => '../'
+
+  target 'SLSegmentPageView_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
