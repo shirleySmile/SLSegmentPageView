@@ -121,7 +121,7 @@ const char *SLSegmentPageContentControllerAction;
     line.backgroundColor = self.tintColor;
     [titleSV addSubview:line];
     
-    for (int i = 0; i<_totalBtnNum; i++) {
+    for (NSInteger i = 0; i<_totalBtnNum; i++) {
         UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
         btn.frame = CGRectMake(i*_titleWidth, 0, _titleWidth, SLSegmentPageTitleHeight);
         if (_isBlock) {
