@@ -12,8 +12,6 @@
 static const float SLSegmentPageTitleHeight  = 44.0;
 static const float SLSegmentPageTitleFont = 15.0;
 static const NSInteger SLSegmentPageTitleTag = 1056501;
-const char *SLSegmentPageOriginalX;
-const char *SLSegmentPageOriginalY;
 const char *SLSegmentPageOriginalW;
 const char *SLSegmentPageOriginalH;
 const char *SLSegmentPageTitleArrAction;
@@ -217,7 +215,8 @@ const char *SLSegmentPageContentControllerAction;
             page = [self.dataSource slSegmentPageWithSubviewsForItem:i];
         }
         if (page) {
-            page.currentBounds = CGRectMake(0, 0, scrollV.frame.size.width, scrollV.frame.size.height);
+            page.segmentPageWidth = scrollV.frame.size.width;
+            page.segmentPageHeight = scrollV.frame.size.height;
             page.view.frame =CGRectMake(i*scrollV.frame.size.width, 0, scrollV.frame.size.width, scrollV.frame.size.height);
             [scrollV addSubview:page.view];
             [[self getCurrentVC] addChildViewController:page];
@@ -356,16 +355,20 @@ const char *SLSegmentPageContentControllerAction;
 
 @implementation UIViewController (PageFrame)
 
-- (void)setCurrentBounds:(CGRect)currentBounds{
-        objc_setAssociatedObject(self, &SLSegmentPageOriginalX,  @(currentBounds.origin.x), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        objc_setAssociatedObject(self, &SLSegmentPageOriginalY,  @(currentBounds.origin.y), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        objc_setAssociatedObject(self, &SLSegmentPageOriginalW, @(currentBounds.size.width), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-        objc_setAssociatedObject(self, &SLSegmentPageOriginalH,  @(currentBounds.size.height),OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+- (void)setSegmentPageWidth:(CGFloat)segmentPageWidth{
+        objc_setAssociatedObject(self, &SLSegmentPageOriginalW, @(segmentPageWidth), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
-- (CGRect)currentBounds{
+- (void)setSegmentPageHeight:(CGFloat)segmentPageHeight{
+        objc_setAssociatedObject(self, &SLSegmentPageOriginalH,  @(segmentPageHeight),OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
 
-    return CGRectMake([objc_getAssociatedObject(self, &SLSegmentPageOriginalX) floatValue], [objc_getAssociatedObject(self, &SLSegmentPageOriginalY) floatValue], [objc_getAssociatedObject(self, &SLSegmentPageOriginalW) floatValue], [objc_getAssociatedObject(self,  &SLSegmentPageOriginalH) floatValue]);
+- (CGFloat)segmentPageWidth{
+    return [objc_getAssociatedObject(self, &SLSegmentPageOriginalW) floatValue];
+}
+- (CGFloat)segmentPageHeight{
+    return [objc_getAssociatedObject(self,  &SLSegmentPageOriginalH) floatValue];
 }
 
 @end

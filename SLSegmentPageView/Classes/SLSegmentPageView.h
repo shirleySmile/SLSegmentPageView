@@ -58,8 +58,8 @@ typedef NS_ENUM(NSInteger,SLSegmentPageSeparateStyle) {
 
 @interface UIViewController (PageFrame)
 
-//show content frame
-@property (nonatomic,assign)CGRect currentBounds;
+@property (nonatomic , assign)CGFloat segmentPageWidth;
+@property (nonatomic , assign)CGFloat segmentPageHeight;
 
 @end
 
