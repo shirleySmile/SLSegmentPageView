@@ -152,7 +152,7 @@ const char *SLSegmentPageContentControllerAction;
 
 -(void)createLineWithBtn:(UIButton *)btn num:(NSInteger)i{
     
-    if (self.separateStyle == nil || self.separateStyle == SLSegmentPageSeparateStyleSingleLine) {
+    if (self.separateStyle == SLSegmentPageSeparateStyleSingleLine) {
         if ( i > 0){
             UIView *verticalLine = [[UIView alloc] initWithFrame:CGRectMake( -0.5, (SLSegmentPageTitleHeight-20)/2, 1, 20)];
             verticalLine.backgroundColor = self.tintColor;
