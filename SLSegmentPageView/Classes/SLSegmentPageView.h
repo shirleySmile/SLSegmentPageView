@@ -12,7 +12,7 @@
 @interface SLSegmentPageView : UIView
 
 @property (nonatomic, assign) CGFloat titleWidth; //default titleArr total with equal to screenWith
-@property (nonatomic, strong) UIColor *titleColor;  //default the color equal to  the navigation bar
+@property (nonatomic, strong) UIColor *titleColor;  //default the color equal to  the black
 @property (nonatomic, strong) UIColor *lineColor;   //default equal to titleColor;
 @property (nonatomic, assign) NSInteger selectOne; //default show first view
 @property (nonatomic, assign) BOOL pageScrollEnabled;  //contentScrollView default NO

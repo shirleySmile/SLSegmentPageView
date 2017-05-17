@@ -7,7 +7,6 @@
 //
 
 #import "SLSegmentPageView.h"
-#import "PreHeader.h"
 #import "objc/runtime.h"
 
 static const float SLSegmentPageTitleHeight  = 44;
@@ -60,8 +59,7 @@ char const SLSegmentPageContentController;
 - (void)initData{
     _pageScrollEnabled = NO;
     self.backgroundColor = [UIColor whiteColor];
-    NSDictionary *conf = [NSDictionary dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"conf-system-style" ofType:@"plist"]];
-    _titleColor = _lineColor = [UIColor colorWithHex:conf[@"sys-navbar-bar-tint-color"][@"conf-value"]];
+    _titleColor = _lineColor = [UIColor blackColor];
 }
 - (instancetype)init
 {
