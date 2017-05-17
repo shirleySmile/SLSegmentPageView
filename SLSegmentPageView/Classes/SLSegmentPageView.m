@@ -7,26 +7,31 @@
 //
 
 #import "SLSegmentPageView.h"
+#import "PreHeader.h"
 #import "objc/runtime.h"
 
-static const float SLSegmentPageTitleHeight  = 44.0;
-static const float SLSegmentPageTitleFont = 15.0;
-static const NSInteger SLSegmentPageTitleTag = 1056501;
-const char *SLSegmentPageOriginalW;
-const char *SLSegmentPageOriginalH;
-const char *SLSegmentPageTitleArrAction;
-const char *SLSegmentPageContentControllerAction;
+static const float SLSegmentPageTitleHeight  = 44;
+static const float SLSegmentPageTitleFont = 15;
+static const NSInteger SLSegmentPageTag = 1056501;
+
+const char SLSegmentPageOriginalX;
+const char SLSegmentPageOriginalY;
+const char SLSegmentPageOriginalW;
+const char SLSegmentPageOriginalH;
+char const SLSegmentPageSelectItem;
+char const SLSegmentPageContentController;
 
 @interface SLSegmentPageView ()<UIScrollViewDelegate>
 {
     NSInteger _totalBtnNum;
-    BOOL _isBlock;
 }
-@property (nonatomic, weak)UIScrollView *titleScrollView;
+@property (nonatomic, weak) UIScrollView *titleScrollView;
 @property (nonatomic, weak) UIScrollView *contentScrollView;
-@property (nonatomic, strong)NSMutableArray<__kindof UIButton *> *btnMuArr;
+@property (nonatomic, strong) NSMutableArray<__kindof UIButton *> *btnMuArr;
+@property (nonatomic, copy) NSDictionary *vcDict;
+@property (nonatomic, copy) NSArray<__kindof NSString *> *titleArr;
 @property (nonatomic, weak) UIView *lineView;
-@property (nonatomic, strong)NSSet *controllerSet;
+@property (nonatomic, strong) NSSet *controllerSet;
 
 @end
 
@@ -44,14 +49,19 @@ const char *SLSegmentPageContentControllerAction;
 }
 
 - (void)layoutSubviews{
+    if (self.controllerSet.count) {
+        for (UIViewController *vc in self.controllerSet) {
+            [[self getCurrentVC] addChildViewController:vc];
+        }
+    }
     [self createShowView];
 }
 
-- (void) initData{
+- (void)initData{
     _pageScrollEnabled = NO;
     self.backgroundColor = [UIColor whiteColor];
-    _titleColor = _lineColor =[UIColor blackColor];
-    _tintColor = [UIColor lightGrayColor];
+    NSDictionary *conf = [NSDictionary dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"conf-system-style" ofType:@"plist"]];
+    _titleColor = _lineColor = [UIColor colorWithHex:conf[@"sys-navbar-bar-tint-color"][@"conf-value"]];
 }
 - (instancetype)init
 {
@@ -71,15 +81,39 @@ const char *SLSegmentPageContentControllerAction;
     return self;
 }
 
-- (void)slSegmentPageWithTitleArr:(NSArray *(^)())titleArr contentController:(UIViewController *(^)(NSInteger))showView{
-    _isBlock = YES;
-    objc_setAssociatedObject(self, &SLSegmentPageTitleArrAction, titleArr, OBJC_ASSOCIATION_COPY_NONATOMIC);
-    objc_setAssociatedObject(self, &SLSegmentPageContentControllerAction, showView, OBJC_ASSOCIATION_COPY_NONATOMIC);
+- (void)slPageTitleArr:(NSArray *(^)())titleArr contentController:(UIViewController *(^)(NSInteger))showView{
+    if (self.titleScrollView == nil && self.contentScrollView == nil) {
+        NSArray *arr = titleArr();
+        if (arr.count) {
+            _totalBtnNum = [arr count];
+            _titleArr = titleArr();
+        }
+        objc_setAssociatedObject(self, &SLSegmentPageContentController, showView, OBJC_ASSOCIATION_COPY_NONATOMIC);
+    }
+}
+
+- (void)slPageNumber:(NSInteger)number title:(NSString *(^)(NSInteger))title contentController:(UIViewController *(^)(NSInteger))showView{
+    if (self.titleScrollView == nil && self.contentScrollView == nil) {
+        _totalBtnNum = number;
+        NSMutableArray *muArr = [NSMutableArray arrayWithCapacity:number];
+        while (muArr.count < number) {
+            [muArr addObject:title(muArr.count)];
+        }
+        _titleArr = muArr;
+        objc_setAssociatedObject(self, &SLSegmentPageContentController, showView, OBJC_ASSOCIATION_COPY_NONATOMIC);
+    }
+
+}
+
+- (void)slPageItem:(void (^)(UIViewController *, NSInteger))item{
+    objc_setAssociatedObject(self, &SLSegmentPageSelectItem, item, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
 
 -(void)createShowView{
-    if (self.dataSource || _isBlock) {
+    if (self.titleScrollView == nil) {
         [self createClassfiyTitle];
+    }
+    if (self.contentScrollView == nil) {
         [self createContentView];
     }
 }
@@ -98,44 +132,32 @@ const char *SLSegmentPageContentControllerAction;
 #pragma mark 创建分类标题view
 -(void)createClassfiyTitle{
     [self.titleScrollView removeFromSuperview];
-    NSArray *titleArr;
-    if (_isBlock) {
-        NSArray *(^titleArrBlock)() = objc_getAssociatedObject(self, &SLSegmentPageTitleArrAction);
-        if (titleArrBlock) {
-            titleArr = titleArrBlock();
-            _totalBtnNum = [titleArr count];
-        }
-    }else{
-       _totalBtnNum = [self.dataSource slSegmentPageNumberOfPage];
-    }
     _titleWidth = (_titleWidth ? _titleWidth : self.frame.size.width / _totalBtnNum);
     UIScrollView *titleSV = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width,SLSegmentPageTitleHeight)];
     titleSV.contentSize = CGSizeMake(_titleWidth*_totalBtnNum, 0);
     titleSV.backgroundColor= [UIColor clearColor];
     titleSV.showsHorizontalScrollIndicator = NO;
     [self addSubview:titleSV];
-
     UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, SLSegmentPageTitleHeight-1, _titleWidth*_totalBtnNum, 1)];
-    line.backgroundColor = self.tintColor;
+    line.backgroundColor = [UIColor lightGrayColor];
     [titleSV addSubview:line];
-    
-    for (NSInteger i = 0; i<_totalBtnNum; i++) {
+    for (int i = 0; i<_totalBtnNum; i++) {
         UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
         btn.frame = CGRectMake(i*_titleWidth, 0, _titleWidth, SLSegmentPageTitleHeight);
-        if (_isBlock) {
-            [btn setTitle:titleArr[i] forState:UIControlStateNormal];
-        }else{
-            [btn setTitle:[self.dataSource slSegmentPageTitleForItem:i] forState:UIControlStateNormal];
-        }
+        [btn setTitle:self.titleArr[i] forState:UIControlStateNormal];
         [btn addTarget:self action:@selector(titleClick:) forControlEvents:UIControlEventTouchUpInside];
-        btn.tag = SLSegmentPageTitleTag+i;
+        btn.tag = SLSegmentPageTag+i;
         [btn setTitleColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
         [btn setTitleColor:_titleColor forState:UIControlStateSelected];
         btn.titleLabel.font = [UIFont systemFontOfSize:SLSegmentPageTitleFont];
         [titleSV addSubview:btn];
         [self.btnMuArr addObject:btn];
         
-        [self createLineWithBtn:btn num:i];
+        if (i >0){
+            UIView *verticalLine = [[UIView alloc] initWithFrame:CGRectMake( -0.5, 10, 1, SLSegmentPageTitleHeight-20)];
+            verticalLine.backgroundColor = [UIColor lightGrayColor];
+            [btn addSubview:verticalLine];
+        }
         
         if (i == self.selectOne) {
             btn.selected = YES;
@@ -146,40 +168,6 @@ const char *SLSegmentPageContentControllerAction;
         }
     }
     _titleScrollView = titleSV;
-}
-
--(void)createLineWithBtn:(UIButton *)btn num:(NSInteger)i{
-    
-    if (self.separateStyle == SLSegmentPageSeparateStyleSingleLine) {
-        if ( i > 0){
-            UIView *verticalLine = [[UIView alloc] initWithFrame:CGRectMake( -0.5, (SLSegmentPageTitleHeight-20)/2, 1, 20)];
-            verticalLine.backgroundColor = self.tintColor;
-            [btn addSubview:verticalLine];
-        }
-    }
-    if (self.separateStyle == SLSegmentPageSeparateStyleNone) {
-        return;
-    }
-    if (self.separateStyle == SLSegmentPageSeparateStyleFull) {
-        if ( i > 0){
-            UIView *verticalLine = [[UIView alloc] initWithFrame:CGRectMake( -0.5, 0, 1, SLSegmentPageTitleHeight)];
-            verticalLine.backgroundColor = self.tintColor;
-            [btn addSubview:verticalLine];
-        }
-    }
-    if (self.separateStyle == SLSegmentPageSeparateStyleOverall) {
-        UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _titleWidth, 1)];
-        line.backgroundColor = self.tintColor;
-        [btn addSubview:line];
-        if ( i > 0){
-            UIView *verticalLine = [[UIView alloc] initWithFrame:CGRectMake( -0.5, 0, 1, SLSegmentPageTitleHeight)];
-            verticalLine.backgroundColor = self.tintColor;
-            [btn addSubview:verticalLine];
-        }
-        self.layer.borderColor = self.tintColor.CGColor;
-        self.layer.borderWidth = 1.0;
-    }
-    
 }
 
 - (void)setSelectOne:(NSInteger)selectOne{
@@ -205,24 +193,25 @@ const char *SLSegmentPageContentControllerAction;
     [scrollV setContentOffset:CGPointMake(self.selectOne *self.frame.size.width, 0) animated:NO];
     scrollV.delegate =self;
     [self addSubview:scrollV];
+    
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     NSMutableSet *conArr = [[NSMutableSet alloc] init];
     for (int i = 0 ; i<_totalBtnNum; i++) {
         UIViewController *page;
-        if (_isBlock) {
-            UIViewController *(^itemBlock)(NSInteger item) = objc_getAssociatedObject(self, &SLSegmentPageContentControllerAction);
-            page = itemBlock(i);
-        }else{
-            page = [self.dataSource slSegmentPageWithSubviewsForItem:i];
+        UIViewController *(^showView)(NSInteger) = objc_getAssociatedObject(self, &SLSegmentPageContentController);
+        if (showView) {
+            page = showView(i);
         }
         if (page) {
-            page.segmentPageWidth = scrollV.frame.size.width;
-            page.segmentPageHeight = scrollV.frame.size.height;
+            page.currentBounds = CGRectMake(0, 0, scrollV.frame.size.width, scrollV.frame.size.height);
             page.view.frame =CGRectMake(i*scrollV.frame.size.width, 0, scrollV.frame.size.width, scrollV.frame.size.height);
             [scrollV addSubview:page.view];
             [[self getCurrentVC] addChildViewController:page];
             [conArr addObject:page];
+            [dict setObject:page forKey:[NSString stringWithFormat:@"%zi",SLSegmentPageTag+i]];
         }
     }
+    self.vcDict = dict;
     self.controllerSet = conArr;
     _contentScrollView = scrollV;
 }
@@ -238,17 +227,17 @@ const char *SLSegmentPageContentControllerAction;
 -(void)scrollViewDidScroll:(UIScrollView *)scrollView{
     if (scrollView.contentOffset.x == 0) {
         [self moveLineWithXpoint:0];
-        [self showBtnSelect:SLSegmentPageTitleTag];
+        [self showBtnSelect:SLSegmentPageTag];
     }else{
         CGFloat contentSet = scrollView.contentOffset.x;  //移动的距离
         CGFloat lineMoveX = _titleWidth*contentSet/self.frame.size.width;
         [self moveLineWithXpoint:lineMoveX];
         int btnNum = (int)(contentSet/self.frame.size.width);
         if (lineMoveX <=  _titleWidth/2+(_titleWidth * btnNum)) {
-            [self showBtnSelect:btnNum + SLSegmentPageTitleTag];
+            [self showBtnSelect:btnNum + SLSegmentPageTag];
         }
         else if (lineMoveX < _titleWidth+(_titleWidth* btnNum)) {
-            [self showBtnSelect: btnNum+SLSegmentPageTitleTag+1];
+            [self showBtnSelect: btnNum+SLSegmentPageTag+1];
         }
     }
 }
@@ -256,15 +245,17 @@ const char *SLSegmentPageContentControllerAction;
 #pragma mark 点击titlebtn
 -(void)titleClick:(UIButton *)btn{
     //选择第几个btn
-    _selectOne = btn.tag-SLSegmentPageTitleTag;
+    _selectOne = btn.tag-SLSegmentPageTag;
     [self showBtnSelect:btn.tag];
     //移动btn下面的横线
     [self moveLineWithXpoint:btn.frame.origin.x];
     //移动内容的scrollview
-    [self moveBigScorllContentSizeWithNum:btn.tag-SLSegmentPageTitleTag];
+    [self moveBigScorllContentSizeWithNum:btn.tag-SLSegmentPageTag];
     
-    if (self.delegate && [self.delegate respondsToSelector:@selector(slSegmentPageView:selectItem:)]) {
-        [self.delegate slSegmentPageView:self selectItem:_selectOne];
+    
+    void (^selectItem)(UIViewController *, NSInteger) = objc_getAssociatedObject(self, &SLSegmentPageSelectItem);
+    if (selectItem) {
+        selectItem(self.vcDict[[NSString stringWithFormat:@"%zi",btn.tag]],_selectOne);
     }
 }
 
@@ -279,7 +270,7 @@ const char *SLSegmentPageContentControllerAction;
         }
     }
     
-    [self setClassifyTitleContentSize:btnTag-SLSegmentPageTitleTag];
+    [self setClassifyTitleContentSize:btnTag-SLSegmentPageTag];
 }
 
 #pragma mark 设置分类标题scrollView的偏移量   num选择的第几个btn
@@ -319,19 +310,6 @@ const char *SLSegmentPageContentControllerAction;
 
 - (UIViewController *)getCurrentVC
 {
-    id currentId = nil;
-    if (self.delegate) {
-        currentId = self.delegate;
-    }
-    if (self.dataSource) {
-        currentId = self.dataSource;
-    }
-    if ([currentId isKindOfClass:[UIViewController class]]) {
-        return (UIViewController *)self.delegate;
-    }
-    if ([currentId isKindOfClass:[UIView class]]) {
-        return [self getCurrentViewController:(UIView *)self.delegate];
-    }
     return [self getCurrentViewController:self];
 }
 
@@ -340,7 +318,6 @@ const char *SLSegmentPageContentControllerAction;
     do
     {
         nextResponder = [nextResponder nextResponder];
-        
         if ([nextResponder isKindOfClass:[UIViewController class]])
             return (UIViewController*)nextResponder;
         
@@ -355,20 +332,16 @@ const char *SLSegmentPageContentControllerAction;
 
 @implementation UIViewController (PageFrame)
 
-
-- (void)setSegmentPageWidth:(CGFloat)segmentPageWidth{
-        objc_setAssociatedObject(self, &SLSegmentPageOriginalW, @(segmentPageWidth), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+- (void)setCurrentBounds:(CGRect)currentBounds{
+        objc_setAssociatedObject(self, &SLSegmentPageOriginalX,  @(currentBounds.origin.x), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(self, &SLSegmentPageOriginalY,  @(currentBounds.origin.y), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(self, &SLSegmentPageOriginalW, @(currentBounds.size.width), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(self, &SLSegmentPageOriginalH,  @(currentBounds.size.height),OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
-- (void)setSegmentPageHeight:(CGFloat)segmentPageHeight{
-        objc_setAssociatedObject(self, &SLSegmentPageOriginalH,  @(segmentPageHeight),OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
+- (CGRect)currentBounds{
 
-- (CGFloat)segmentPageWidth{
-    return [objc_getAssociatedObject(self, &SLSegmentPageOriginalW) floatValue];
-}
-- (CGFloat)segmentPageHeight{
-    return [objc_getAssociatedObject(self,  &SLSegmentPageOriginalH) floatValue];
+    return CGRectMake([objc_getAssociatedObject(self, &SLSegmentPageOriginalX) floatValue], [objc_getAssociatedObject(self, &SLSegmentPageOriginalY) floatValue], [objc_getAssociatedObject(self, &SLSegmentPageOriginalW) floatValue], [objc_getAssociatedObject(self,  &SLSegmentPageOriginalH) floatValue]);
 }
 
 @end
