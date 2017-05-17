@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'SLSegmentPageView'
-  s.version          = '0.1.1'
+  s.version          = '0.1.2'
   s.summary          = ' select segment and show which one page.'
 
   s.description      = <<-DESC
@@ -9,6 +9,9 @@ Pod::Spec.new do |s|
 add initial file with select segment and show which one page.
 0.1.1
 modify enum
+0.1.2
+modify make method
+
 
                        DESC
 
