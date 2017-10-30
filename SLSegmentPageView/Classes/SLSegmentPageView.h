@@ -11,17 +11,30 @@
 
 @interface SLSegmentPageView : UIView
 
+
+/**
+ one item view
+ */
 @property (nonatomic, assign) CGFloat titleWidth; //default titleArr total with equal to screenWith
 @property (nonatomic, weak) UIColor *selectTitleColor;  //default the color equal to  the black
 @property (nonatomic, weak) UIColor *defaultTitleColor;  //default darkGrayColor
+@property (nonatomic, weak) UIColor *selectLineColor; //default titleColor
 
+/**
+ titleView for line
+ */
 @property (nonatomic, assign) BOOL hasSeparateLine;   // has separate line view. default no
+@property (nonatomic, assign) BOOL hasBottomLine;   // has separate line view. default no
 @property (nonatomic, weak) UIColor *separateLineColor; //default lightGrayColor
-@property (nonatomic, weak)UIColor *selectLineColor; //default titleColor
 @property (nonatomic, weak) UIColor *bottomLineColor; //default lightGrayColor
 
+/**
+ function
+ */
+@property (nonatomic, weak) UIColor *titleBgColor; //title view background color
 @property (nonatomic, assign) NSInteger selectOne; //default show first view
 @property (nonatomic, assign) BOOL pageScrollEnabled;  //contentScrollView default yes
+
 
 
 /** 根据标题数组的个数显示 界面数量   titleArr kind of NSString */
