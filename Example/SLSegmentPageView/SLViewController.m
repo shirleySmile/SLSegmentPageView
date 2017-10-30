@@ -19,11 +19,12 @@
 {
     [super viewDidLoad];
     SLSegmentPageView *page = [[SLSegmentPageView alloc] initWithFrame:CGRectMake(20, 64, self.view.frame.size.width-40, 300)];
-    [page slSegmentPageWithTitleArr:^NSArray *{
-        return @[@"好好",@"学习",@"✨",@"天天",@"向上"];
+    [page slPageTitleArr:^NSArray *{
+         return @[@"好好",@"学习",@"✨",@"天天",@"向上"];
     } contentController:^UIViewController *(NSInteger item) {
-        return nil;
+         return nil;
     }];
+
     [self.view addSubview:page];
 }
 

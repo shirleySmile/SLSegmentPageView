@@ -44,7 +44,7 @@ char const SLSegmentPageContentController;
     _contentScrollView =nil;
     _titleScrollView = nil;
     _btnMuArr = nil;
-    _titleColor = nil;
+    _selectLineColor = nil;
 }
 
 - (void)layoutSubviews{
@@ -57,9 +57,12 @@ char const SLSegmentPageContentController;
 }
 
 - (void)initData{
-    _pageScrollEnabled = NO;
+    _hasSeparateLine = NO;
+    _pageScrollEnabled = YES;
     self.backgroundColor = [UIColor whiteColor];
-    _titleColor = _lineColor = [UIColor blackColor];
+    _defaultTitleColor =  [UIColor darkGrayColor];
+    _selectTitleColor = _selectLineColor = [UIColor blackColor];
+    _separateLineColor =_bottomLineColor = [UIColor lightGrayColor];
 }
 - (instancetype)init
 {
@@ -79,7 +82,7 @@ char const SLSegmentPageContentController;
     return self;
 }
 
-- (void)slPageTitleArr:(NSArray *(^)())titleArr contentController:(UIViewController *(^)(NSInteger))showView{
+- (void)slPageTitleArr:(NSArray *(^)(void))titleArr contentController:(UIViewController *(^)(NSInteger))showView{
     if (self.titleScrollView == nil && self.contentScrollView == nil) {
         NSArray *arr = titleArr();
         if (arr.count) {
@@ -137,7 +140,7 @@ char const SLSegmentPageContentController;
     titleSV.showsHorizontalScrollIndicator = NO;
     [self addSubview:titleSV];
     UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, SLSegmentPageTitleHeight-1, _titleWidth*_totalBtnNum, 1)];
-    line.backgroundColor = [UIColor lightGrayColor];
+    line.backgroundColor =_bottomLineColor;
     [titleSV addSubview:line];
     for (int i = 0; i<_totalBtnNum; i++) {
         UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -145,22 +148,22 @@ char const SLSegmentPageContentController;
         [btn setTitle:self.titleArr[i] forState:UIControlStateNormal];
         [btn addTarget:self action:@selector(titleClick:) forControlEvents:UIControlEventTouchUpInside];
         btn.tag = SLSegmentPageTag+i;
-        [btn setTitleColor:[UIColor darkGrayColor] forState:UIControlStateNormal];
-        [btn setTitleColor:_titleColor forState:UIControlStateSelected];
+        [btn setTitleColor:_defaultTitleColor forState:UIControlStateNormal];
+        [btn setTitleColor:_selectTitleColor forState:UIControlStateSelected];
         btn.titleLabel.font = [UIFont systemFontOfSize:SLSegmentPageTitleFont];
         [titleSV addSubview:btn];
         [self.btnMuArr addObject:btn];
         
-        if (i >0){
+        if (i > 0 && _hasSeparateLine){
             UIView *verticalLine = [[UIView alloc] initWithFrame:CGRectMake( -0.5, 10, 1, SLSegmentPageTitleHeight-20)];
-            verticalLine.backgroundColor = [UIColor lightGrayColor];
+            verticalLine.backgroundColor = _separateLineColor;
             [btn addSubview:verticalLine];
         }
         
         if (i == self.selectOne) {
             btn.selected = YES;
             UIView *line = [[UIView alloc] initWithFrame:CGRectMake(self.selectOne*_titleWidth, SLSegmentPageTitleHeight-1, _titleWidth, 1)];
-            line.backgroundColor = _lineColor;
+            line.backgroundColor = _selectLineColor;
             [titleSV addSubview:line];
             _lineView = line;
         }
