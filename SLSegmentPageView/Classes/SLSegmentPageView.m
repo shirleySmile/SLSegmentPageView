@@ -314,7 +314,7 @@ char const SLSegmentPageContentController;
     __weak typeof(self) weakSelf =self;
     if (self.pageScrollEnabled) {
         self.contentScrollView.delegate = nil;
-        [UIView animateWithDuration:SLSegmentTimeInterval+0.5 animations:^{
+        [UIView animateWithDuration:SLSegmentTimeInterval animations:^{
             [weakSelf.contentScrollView setContentOffset:CGPointMake(self.frame.size.width*tag, 0)];
         } completion:^(BOOL finished) {
             self.contentScrollView.delegate = weakSelf;

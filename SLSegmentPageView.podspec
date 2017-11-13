@@ -1,9 +1,8 @@
 
 Pod::Spec.new do |s|
   s.name             = 'SLSegmentPageView'
-  s.version          = '0.1.5'
+  s.version          = '0.1.6'
   s.summary          = ' select segment and show which one page.'
-
   s.description      = <<-DESC
 0.1.0
 add initial file with select segment and show which one page.

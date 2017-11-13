@@ -18,11 +18,15 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    NSArray *color = @[[UIColor redColor],[UIColor yellowColor],[UIColor blueColor],[UIColor greenColor],[UIColor purpleColor],];
     SLSegmentPageView *page = [[SLSegmentPageView alloc] initWithFrame:CGRectMake(20, 64, self.view.frame.size.width-40, 300)];
     [page slPageTitleArr:^NSArray *{
          return @[@"好好",@"学习",@"✨",@"天天",@"向上"];
     } contentController:^UIViewController *(NSInteger item) {
-         return nil;
+        UIViewController *Vc = [[UIViewController alloc] init];
+        Vc.view.backgroundColor = color[item];
+        return Vc;
     }];
 
     [self.view addSubview:page];
